@@ -1,0 +1,5 @@
+kickstarter_connector/files/
+fivetran-mcp/
+ks-projects-201801.csv
+__pycache__/
+*.pyc
