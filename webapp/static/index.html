@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GreenlightX — Kickstarter Campaign Diagnostic</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #080808;
+      color: #e8e8e8;
+      min-height: 100vh;
+    }
+    header {
+      padding: 20px 48px;
+      border-bottom: 1px solid #1c1c1c;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo-area { display: flex; align-items: center; gap: 10px; }
+    .logo { font-size: 20px; font-weight: 800; color: #00ff88; letter-spacing: -0.5px; }
+    .logo-sub { font-size: 13px; color: #444; }
+    .badge {
+      font-size: 11px;
+      background: #0a1f0f;
+      color: #00ff88;
+      border: 1px solid #00ff8830;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .container { max-width: 860px; margin: 0 auto; padding: 52px 24px 80px; }
+    .hero { margin-bottom: 48px; }
+    .hero h1 {
+      font-size: 36px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 14px;
+      letter-spacing: -1px;
+    }
+    .hero h1 span { color: #00ff88; }
+    .hero p { color: #555; font-size: 16px; line-height: 1.7; max-width: 560px; }
+    .card {
+      background: #0e0e0e;
+      border: 1px solid #1c1c1c;
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group:last-child:not(:first-child) { grid-column: 1 / -1; }
+    label { font-size: 12px; color: #555; font-weight: 500; letter-spacing: 0.3px; }
+    input, textarea {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 8px;
+      color: #e8e8e8;
+      font-size: 14px;
+      padding: 11px 14px;
+      transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #00ff8860;
+      background: #161616;
+    }
+    textarea { resize: vertical; min-height: 90px; }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: #00ff88;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.15s;
+      letter-spacing: 0.2px;
+    }
+    .btn:hover { background: #00e87a; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-inner { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid #00000030;
+      border-top-color: #000;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: #0a1f0f;
+      border: 1px solid #00ff8820;
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #00ff88;
+    }
+    .status-dot {
+      width: 7px; height: 7px;
+      background: #00ff88;
+      border-radius: 50%;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    #output { display: none; margin-top: 8px; }
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .output-title { font-size: 14px; font-weight: 700; color: #00ff88; }
+    .data-pill {
+      font-size: 11px;
+      background: #0a1f0f;
+      color: #00ff8899;
+      border: 1px solid #00ff8820;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .output-body {
+      font-size: 14px;
+      line-height: 1.8;
+      color: #ccc;
+    }
+    .output-body h1, .output-body h2, .output-body h3 {
+      color: #fff;
+      margin: 20px 0 10px;
+      font-size: 15px;
+    }
+    .output-body h3:first-child { margin-top: 0; }
+    .output-body table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 13px;
+    }
+    .output-body th {
+      background: #141414;
+      color: #888;
+      font-weight: 600;
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid #222;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .output-body td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #161616;
+      color: #bbb;
+    }
+    .output-body tr:last-child td { border-bottom: none; }
+    .output-body tr:hover td { background: #0f0f0f; }
+    .output-body strong { color: #fff; }
+    .output-body em { color: #00ff88; font-style: normal; }
+    .output-body ul, .output-body ol {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+    .output-body li { margin: 6px 0; }
+    .output-body hr {
+      border: none;
+      border-top: 1px solid #1c1c1c;
+      margin: 20px 0;
+    }
+    .output-body blockquote {
+      border-left: 3px solid #00ff88;
+      padding: 10px 16px;
+      background: #0a1f0f;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      color: #aaa;
+      font-style: italic;
+    }
+    .powered {
+      text-align: center;
+      margin-top: 60px;
+      font-size: 12px;
+      color: #2a2a2a;
+    }
+    .powered span { color: #333; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-area">
+      <div class="logo">GreenlightX</div>
+      <div class="logo-sub">Kickstarter Campaign Diagnostic</div>
+    </div>
+    <div class="badge">Powered by Fivetran · BigQuery · Gemini</div>
+  </header>
+
+  <div class="container">
+    <div class="hero">
+      <h1>Get your campaign <span>rewritten</span><br>before you launch.</h1>
+      <p>Paste your draft. GreenlightX benchmarks it against 300,000+ real Kickstarter campaigns that funded vs failed — and rewrites your plan with evidence-backed fixes.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Your Draft Campaign</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CATEGORY</label>
+          <input type="text" id="category" placeholder="e.g. Comics, Games, Technology">
+        </div>
+        <div class="form-group">
+          <label>GOAL AMOUNT (USD)</label>
+          <input type="number" id="goal" placeholder="e.g. 25000">
+        </div>
+        <div class="form-group">
+          <label>DURATION (DAYS)</label>
+          <input type="number" id="duration" placeholder="e.g. 45">
+        </div>
+        <div class="form-group">
+          <label>CAMPAIGN BLURB</label>
+          <textarea id="blurb" placeholder="Paste your campaign description..."></textarea>
+        </div>
+      </div>
+      <button class="btn" id="btn" onclick="diagnose()">
+        <div class="btn-inner">
+          <div class="spinner" id="spinner"></div>
+          <span id="btn-text">Diagnose My Campaign</span>
+        </div>
+      </button>
+      <div class="status-bar" id="status">
+        <div class="status-dot"></div>
+        <span id="status-text">Querying 300,000+ campaigns in BigQuery via Fivetran...</span>
+      </div>
+    </div>
+
+    <div id="output">
+      <div class="card">
+        <div class="output-header">
+          <div class="output-title">GreenlightX Diagnosis</div>
+          <div class="data-pill" id="data-pill">Live BigQuery data</div>
+        </div>
+        <div class="output-body" id="result"></div>
+      </div>
+    </div>
+
+    <div class="powered">
+      Built on <span>Fivetran · Google BigQuery · Gemini · Google Cloud Run · Google ADK</span>
+    </div>
+  </div>
+
+  <script>
+    const statusMessages = [
+      "Querying 300,000+ campaigns in BigQuery via Fivetran...",
+      "Analyzing funded vs failed campaigns in your category...",
+      "Identifying comparable winners...",
+      "Generating evidence-backed rewrite..."
+    ];
+    let statusInterval;
+
+    async function diagnose() {
+      const category = document.getElementById('category').value.trim();
+      const goal = document.getElementById('goal').value.trim();
+      const duration = document.getElementById('duration').value.trim();
+      const blurb = document.getElementById('blurb').value.trim();
+
+      if (!category || !goal || !duration || !blurb) {
+        alert('Please fill in all fields.');
+        return;
+      }
+
+      const btn = document.getElementById('btn');
+      const spinner = document.getElementById('spinner');
+      const btnText = document.getElementById('btn-text');
+      const status = document.getElementById('status');
+      const output = document.getElementById('output');
+      const result = document.getElementById('result');
+
+      btn.disabled = true;
+      spinner.style.display = 'block';
+      btnText.textContent = 'Analyzing...';
+      status.style.display = 'flex';
+      output.style.display = 'none';
+
+      let msgIndex = 0;
+      statusInterval = setInterval(() => {
+        msgIndex = (msgIndex + 1) % statusMessages.length;
+        document.getElementById('status-text').textContent = statusMessages[msgIndex];
+      }, 2500);
+
+      try {
+        const response = await fetch('/diagnose', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category, goal, duration, blurb })
+        });
+        const data = await response.json();
+
+        clearInterval(statusInterval);
+        status.style.display = 'none';
+        output.style.display = 'block';
+        result.innerHTML = marked.parse(data.response || 'No response received.');
+
+      } catch (err) {
+        clearInterval(statusInterval);
+        status.style.display = 'none';
+        output.style.display = 'block';
+        result.textContent = 'Something went wrong. Please try again.';
+      }
+
+      btn.disabled = false;
+      spinner.style.display = 'none';
+      btnText.textContent = 'Diagnose My Campaign';
+    }
+  </script>
+</body>
+</html>
